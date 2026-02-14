@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGC Arithmetic Exam</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #fdf7d6;
+  margin: 0;
+}
+
+/* ---------- COMMON MODAL ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  background: #fff;
+  padding: 25px;
+  width: 380px;
+  border-radius: 8px;
+}
+
+.modal-box h2 {
+  text-align: center;
+}
+
+/* ---------- START MODAL ---------- */
+#startModal { display: flex; }
+
+.modal-box input,
+.modal-box select,
+.modal-box button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+/* ---------- PAPER ---------- */
+.paper {
+  width: 1200px;
+  margin: 10px auto;
+  border: 4px solid red;
+  padding: 10px;
+  display: none;
+}
+
+.header {
+  background: #cfeff0;
+  padding: 15px;
+  font-size: 30px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.info {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  align-items: center;
+}
+
+.name-input {
+  width: 200px;
+}
+
+/* ---------- GRID ---------- */
+.grid {
+  display: grid;
+  gap: 6px;
+}
+
+.sum {
+  background: #c9f4f5;
+  border: 2px solid #00b7c7;
+  text-align: center;
+}
+
+.sum-header {
+  background: #00c3d6;
+  font-weight: bold;
+  padding: 4px;
+  font-size: 12px;
+}
+
+.sum-body {
+  padding: 6px;
+  font-size: 15px;
+}
+
+.answer-input {
+    width: 80%;
+    height: 28px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.correct { color: green; font-weight: bold; }
+.wrong { color: red; font-weight: bold; }
+
+/* ---------- TIMER ---------- */
+#timer {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.blink {
+  color: red;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+/* ================= RESPONSIVE ================= */
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .paper {
+    width: 95%;
+  }
+
+  .grid {
+    gap: 5px;
+  }
+
+  .sum-body {
+    font-size: 14px;
+  }
+
+  .answer-input {
+    width: 85%;
+    font-size: 13px;
+  }
+}
+
+/* Mobile phones */
+@media (max-width: 768px) {
+  .paper {
+    width: 100%;
+    margin: 0;
+    border-width: 2px;
+  }
+
+  .header {
+    font-size: 20px;
+    padding: 10px;
+  }
+
+  .info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .name-input {
+    width: 100%;
+  }
+
+  /* 🔑 KEY PART: grid auto adapts */
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)) !important;
+  }
+
+  .sum-header {
+    font-size: 11px;
+    padding: 3px;
+  }
+
+  .sum-body {
+    font-size: 13px;
+    padding: 4px;
+  }
+
+  .answer-input {
+    width: 90%;
+    height: 26px;
+    font-size: 13px;
+  }
+
+  #timer {
+    font-size: 16px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)) !important;
+  }
+
+  .sum-body {
+    font-size: 12px;
+  }
+
+  .answer-input {
+    font-size: 12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ---------- START MODAL ---------- -->
+<div class="modal" id="startModal">
+  <div class="modal-box">
+    <h2>Start Test</h2>
+    <input id="studentName" placeholder="Student Name">
+    <select id="roundSelect">
+      <option value="1">Round 1</option>
+      <option value="2">Round 2</option>
+      <option value="3">Round 3</option>
+      <option value="4">Round 4</option>
+    </select>
+    <button onclick="startExam()">Start Exam</button>
+  </div>
+</div>
+
+<!-- ---------- RESULT MODAL ---------- -->
+<div class="modal" id="resultModal">
+  <div class="modal-box">
+    <h2>Test Result</h2>
+    <p><b>Score:</b> <span id="resScore"></span></p>
+    <p><b>Correct Answers:</b> <span id="resCorrect"></span></p>
+    <p><b>Wrong Answers:</b> <span id="resWrong"></span></p>
+    <p><b>Time Taken:</b> <span id="resTime"></span></p>
+    <hr>
+    <p style="font-size:14px;color:#555">
+      You can retake the test by clicking the <b>Retake Test</b> button.
+    </p>
+    <button onclick="retakeExam()">Retake Test</button>
+  </div>
+</div>
+
+<!-- ---------- PAPER ---------- -->
+<div class="paper" id="paper">
+
+  <div class="header" id="title"></div>
+
+  <div class="info">
+    <div>
+      Student Name :
+      <input id="nameField" class="name-input" readonly>
+    </div>
+    <div style="text-align:right">
+      TIME : <span id="timer">00:00</span><br>
+      MARKS : <span id="marks"></span><br><br>
+      <button onclick="submitExam()">Submit</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+let remainingSeconds, totalSeconds;
+let timerInterval;
+let currentRound;
+
+/* ---------- ROUND CONFIG ---------- */
+const rounds = {
+  1:{title:"AGC Round 1 - Class 2",time:10,marks:"/100",count:50,cols:12,score:2,three:0},
+  2:{title:"AGC Round 2 - Class 2",time:20,marks:"/100",count:100,cols:25,score:1,three:20},
+  3:{title:"AGC Round 3 - Class 2",time:10,marks:"/200",count:200,cols:25,score:1,three:40},
+  4:{title:"AGC Round 4 - Class 2",time:10,marks:"/300",count:300,cols:25,score:1,three:60}
+};
+
+/* ---------- START ---------- */
+function startExam() {
+  const name = studentName.value.trim();
+  const r = roundSelect.value;
+  if (!name) return alert("Enter name");
+
+  currentRound = rounds[r];
+  currentRound.questions = generateQuestions(currentRound.count, currentRound.three);
+
+  startModal.style.display = "none";
+  paper.style.display = "block";
+
+  title.innerText = currentRound.title;
+  nameField.value = name;
+  marks.innerText = currentRound.marks;
+
+  renderGrid();
+  startTimer();
+}
+
+/* ---------- QUESTIONS ---------- */
+function generateQuestions(total, three) {
+  const q = [];
+  for (let i=0;i<total;i++){
+    if(i<three){
+      const nums=[rand(1,30),randSigned(1,20),randSigned(1,20)];
+      q.push({nums,ans:nums.reduce((a,b)=>a+b,0)});
+    } else {
+      const a=rand(10,99), b=randSigned(1,10);
+      q.push({nums:[a,b],ans:a+b});
+    }
+  }
+  return shuffle(q);
+}
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const randSigned=(a,b)=>Math.random()<0.5?rand(a,b):-rand(a,b);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a};
+
+/* ---------- GRID ---------- */
+function renderGrid(){
+  grid.style.gridTemplateColumns=`repeat(${currentRound.cols},1fr)`;
+  grid.innerHTML="";
+  currentRound.questions.forEach((q,i)=>{
+    const txt=q.nums.map((n,j)=>j===0?n:(n>=0?`+${n}`:n)).join("<br>");
+    grid.innerHTML+=`
+      <div class="sum">
+        <div class="sum-header">Sum ${i+1}</div>
+        <div class="sum-body">${txt}</div>
+        <input class="answer-input" data-i="${i}" inputmode="numeric">
+      </div>`;
+  });
+}
+
+/* ---------- TIMER ---------- */
+function startTimer(){
+  remainingSeconds=totalSeconds=currentRound.time*60;
+  timerInterval=setInterval(()=>{
+    remainingSeconds--;
+    if(remainingSeconds<=30) timer.classList.add("blink");
+    if(remainingSeconds<=0){clearInterval(timerInterval);submitExam();}
+    updateTimer();
+  },1000);
+}
+function updateTimer(){
+  const m=Math.floor(remainingSeconds/60), s=remainingSeconds%60;
+  timer.innerText=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+/* ---------- SUBMIT ---------- */
+function submitExam(){
+  clearInterval(timerInterval);
+  let score=0, correct=0, wrong=0;
+
+  document.querySelectorAll(".answer-input").forEach(i=>{
+    const idx=i.dataset.i;
+    if(+i.value===currentRound.questions[idx].ans){
+      i.classList.add("correct");
+      score+=currentRound.score; correct++;
+    } else {
+      i.classList.add("wrong"); wrong++;
+    }
+    i.readOnly=true;
+  });
+
+  const timeTaken=totalSeconds-remainingSeconds;
+  resScore.innerText=score;
+  resCorrect.innerText=correct;
+  resWrong.innerText=wrong;
+  resTime.innerText=`${Math.floor(timeTaken/60)}m ${timeTaken%60}s`;
+
+  resultModal.style.display="flex";
+}
+
+/* ---------- RETAKE ---------- */
+function retakeExam(){
+  resultModal.style.display="none";
+  paper.style.display="none";
+  startModal.style.display="flex";
+}
+</script>
+
+</body>
+</html>
